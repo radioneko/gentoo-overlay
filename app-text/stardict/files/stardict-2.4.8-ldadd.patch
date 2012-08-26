@@ -1,0 +1,26 @@
+diff --git a/src/Makefile.am b/src/Makefile.am
+index f128048..7f35f9e 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -13,7 +13,7 @@ INCLUDES =							                            \
+ 
+ stardict_DEPENDENCIES = lib/libstardict.a
+ stardict_LDFLAGS = 
+-stardict_LDADD = $(STARDICT_LIBS) lib/libstardict.a
++stardict_LDADD = lib/libstardict.a $(STARDICT_LIBS)
+ 
+ if !GNOME_SUPPORT
+ CONFIG_FILE_MODULE = inifile.cpp inifile.hpp
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 2f53b82..ae97b72 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -23,7 +23,7 @@ t_query_DEPENDENCIES = $(top_builddir)/src/lib/libstardict.a
+ t_lookupdata_SOURCES = t_lookupdata.cpp
+ t_lookupdata_DEPENDENCIES = $(top_builddir)/src/lib/libstardict.a
+ 
+-LDADD = @STARDICT_LIBS@ $(top_builddir)/src/lib/libstardict.a
++LDADD = $(top_builddir)/src/lib/libstardict.a @STARDICT_LIBS@
+ INCLUDES = @STARDICT_CFLAGS@  -I$(top_builddir) -I$(top_builddir)/src -I$(top_builddir)/src/lib
+ 
+ TESTS = t_config_file t_dict t_query t_lookupdata
