@@ -54,14 +54,6 @@ src_prepare() {
 	gnome2_src_prepare
 }
 
-src_install() {
-	gnome2_src_install
-
-	# dictionary index generation files
-	exeinto /usr/share/stardict/tools
-	doexe "${S}"/src/tools/{dictd2dic,directory2dic,olddic2newdic,oxford2dic,pydict2dic,wquick2dic,stardict_dict_update}
-}
-
 pkg_postinst() {
 	elog "You will now need to install stardict dictionary files. If"
 	elog "you have not, execute the below to get a list of dictionaries:"
