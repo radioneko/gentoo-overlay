@@ -4,11 +4,11 @@
 
 EAPI="2"
 
-inherit eutils
+inherit eutils git-2
 
 DESCRIPTION="pidgin-wishmaster provides better nick completion for MUC"
-HOMEPAGE="http://radioanon.ru/"
-SRC_URI="http://radioanon.ru/${P}.tar.gz"
+HOMEPAGE="http://github.com/radioneko/pidgin-wishmaster/"
+EGIT_REPO_URI="git://github.com/radioneko/${PN}.git"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -22,7 +22,7 @@ DEPEND="${RDEPEND}
 	dev-util/pkgconfig"
 
 src_configure() {
-	econf \
+	./autogen.sh \
 		--disable-static \
 		$(use_enable debug)
 }
@@ -30,5 +30,5 @@ src_configure() {
 src_install() {
 	emake install DESTDIR="${D}" || die "make install failed"
 	find "${D}" -name '*.la' -delete
-	dodoc AUTHORS ChangeLog INSTALL NEWS README VERSION || die
+	dodoc AUTHORS ChangeLog INSTALL NEWS README || die
 }
