@@ -1,0 +1,41 @@
+diff --git a/src/gtkui/ui_gtk.c b/src/gtkui/ui_gtk.c
+index fd42d28..9bb0b85 100644
+--- a/src/gtkui/ui_gtk.c
++++ b/src/gtkui/ui_gtk.c
+@@ -491,24 +491,29 @@ static gboolean window_keypress_cb (GtkWidget * widget, GdkEventKey * event, voi
+         if (focused && GTK_IS_ENTRY (focused))
+             return FALSE;
+ 
+-        switch (event->keyval)
++        switch (event->hardware_keycode)
+         {
+-        case 'z':
++        case 0x34:
+             aud_drct_pl_prev ();
+             return TRUE;
+-        case 'x':
++        case 0x35:
+             aud_drct_play ();
+             return TRUE;
+-        case 'c':
+-        case ' ':
++        case 0x36:
+             aud_drct_pause ();
+             return TRUE;
+-        case 'v':
++        case 0x37:
+             aud_drct_stop ();
+             return TRUE;
+-        case 'b':
++        case 0x38:
+             aud_drct_pl_next ();
+             return TRUE;
++		}
++		switch (event->keyval)
++		{
++        case ' ':
++            aud_drct_pause ();
++            return TRUE;
+         case GDK_Left:
+             if (aud_drct_get_playing ())
+                 aud_drct_seek (aud_drct_get_time () - 5000);
