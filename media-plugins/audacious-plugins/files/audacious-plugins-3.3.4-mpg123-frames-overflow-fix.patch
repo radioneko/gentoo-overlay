@@ -1,0 +1,13 @@
+diff --git a/src/mpg123/mpg123.c b/src/mpg123/mpg123.c
+index e06beaa..c2ffff7 100644
+--- a/src/mpg123/mpg123.c
++++ b/src/mpg123/mpg123.c
+@@ -385,7 +385,7 @@ GET_FORMAT:
+ 	pthread_mutex_unlock (& mutex);
+ 
+ 	int64_t frames_played = 0;
+-	int64_t frames_total = (stop_time - start_time) * ctx.rate / 1000;
++	int64_t frames_total = (int64_t)(stop_time - start_time) * ctx.rate / 1000;
+ 
+ 	while (1)
+ 	{

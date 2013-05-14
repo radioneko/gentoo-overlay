@@ -1,0 +1,13 @@
+diff --git a/src/mpg123/mpg123.c b/src/mpg123/mpg123.c
+index 82949e7..8e06cf6 100644
+--- a/src/mpg123/mpg123.c
++++ b/src/mpg123/mpg123.c
+@@ -375,7 +375,7 @@ GET_FORMAT:
+ 	g_mutex_unlock(ctrl_mutex);
+ 
+ 	gint64 frames_played = 0;
+-	gint64 frames_total = (stop_time - start_time) * ctx.rate / 1000;
++	gint64 frames_total = (gint64)(stop_time - start_time) * ctx.rate / 1000;
+ 
+ 	while (1)
+ 	{

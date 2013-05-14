@@ -72,6 +72,7 @@ src_prepare() {
 	epatch "$FILESDIR"/${P}-fix-build-gmodule.patch
 	epatch "$FILESDIR"/${P}-fix-build-sdl.patch
 	epatch "$FILESDIR"/${P}-gtkgui-qwerty-keyval.patch
+	epatch "$FILESDIR"/${P}-mpg123-frames-overflow-fix.patch
 	eaclocal -I m4
 	eautoheader
 	eautoconf
