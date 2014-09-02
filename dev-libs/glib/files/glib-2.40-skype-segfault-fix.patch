@@ -1,0 +1,172 @@
+diff --git a/configure.ac b/configure.ac
+index a01e58d..6dd6c75 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -590,6 +590,33 @@ AS_IF([test x$glib_native_win32 != xyes && test x$ac_cv_sizeof_long_long = x8],
+ 
+ AC_C_CONST
+ 
++dnl ok, here we try to check whether the systems prototypes for
++dnl malloc and friends actually match the prototypes provided
++dnl by gmem.h (keep in sync). i currently only know how to check
++dnl this reliably with gcc (-Werror), improvements for other
++dnl compilers are apprechiated.
++SANE_MALLOC_PROTOS=no
++AC_MSG_CHECKING([if malloc() and friends prototypes are gmem.h compatible])
++glib_save_CFLAGS=$CFLAGS
++AS_IF([test "x$GCC" = "xyes"], [
++  CFLAGS="$CFLAGS -Werror"
++  AC_TRY_COMPILE([#include <stdlib.h>], [
++    void* (*my_calloc_p)  (size_t, size_t) = calloc;
++    void* (*my_malloc_p)  (size_t)         = malloc;
++    void  (*my_free_p)    (void*)          = free;
++    void* (*my_realloc_p) (void*, size_t)  = realloc;
++    my_calloc_p = 0;
++    my_malloc_p = 0;
++    my_free_p = 0;
++    my_realloc_p = 0;
++  ],
++    AC_DEFINE(SANE_MALLOC_PROTOS, 1, 
++      [Define if you have correct malloc prototypes])
++    SANE_MALLOC_PROTOS=yes)
++])
++AC_MSG_RESULT($SANE_MALLOC_PROTOS)
++CFLAGS=$glib_save_CFLAGS
++
+ dnl
+ dnl check in which direction the stack grows
+ dnl
+@@ -1240,6 +1267,20 @@ AS_IF([test "$gtk_ok" = "yes"], [
+     fi
+ ])
+ 
++dnl *** check for sane realloc() ***
++AC_CACHE_CHECK([whether realloc (NULL,) will work],glib_cv_sane_realloc,[
++        AC_TRY_RUN([#include <stdlib.h>
++        int main() {
++          return realloc (0, sizeof (int)) == 0;
++        }],
++        [glib_cv_sane_realloc=yes],
++        [glib_cv_sane_realloc=no],
++	[glib_cv_sane_realloc=yes])
++])
++AS_IF([test x$glib_cv_sane_realloc = xyes], [
++  AC_DEFINE(REALLOC_0_WORKS,1,[whether realloc (NULL,) works])
++])
++
+ dnl Check for nl_langinfo and CODESET
+ AC_LANG_SAVE
+ AC_LANG_C
+diff --git a/glib/gmem.c b/glib/gmem.c
+index 5363751..14e0844 100644
+--- a/glib/gmem.c
++++ b/glib/gmem.c
+@@ -46,17 +46,72 @@
+ /* notes on macros:
+  * having G_DISABLE_CHECKS defined disables use of glib_mem_profiler_table and
+  * g_mem_profile().
+- * If g_mem_gc_friendly is TRUE, freed memory should be 0-wiped.
++ * REALLOC_0_WORKS is defined if g_realloc (NULL, x) works.
++ * SANE_MALLOC_PROTOS is defined if the systems malloc() and friends functions
++ * match the corresponding GLib prototypes, keep configure.ac and gmem.h in sync here.
++ * g_mem_gc_friendly is TRUE, freed memory should be 0-wiped.
+  */
+ 
++/* --- malloc wrappers --- */
++#ifndef	REALLOC_0_WORKS
++static gpointer
++standard_realloc (gpointer mem,
++		  gsize    n_bytes)
++{
++  if (!mem)
++    return malloc (n_bytes);
++  else
++    return realloc (mem, n_bytes);
++}
++#endif	/* !REALLOC_0_WORKS */
++
++#ifdef SANE_MALLOC_PROTOS
++#  define standard_malloc	malloc
++#  ifdef REALLOC_0_WORKS
++#    define standard_realloc	realloc
++#  endif /* REALLOC_0_WORKS */
++#  define standard_free		free
++#  define standard_calloc	calloc
++#  define standard_try_malloc	malloc
++#  define standard_try_realloc	realloc
++#else	/* !SANE_MALLOC_PROTOS */
++static gpointer
++standard_malloc (gsize n_bytes)
++{
++  return malloc (n_bytes);
++}
++#  ifdef REALLOC_0_WORKS
++static gpointer
++standard_realloc (gpointer mem,
++		  gsize    n_bytes)
++{
++  return realloc (mem, n_bytes);
++}
++#  endif /* REALLOC_0_WORKS */
++static void
++standard_free (gpointer mem)
++{
++  free (mem);
++}
++static gpointer
++standard_calloc (gsize n_blocks,
++		 gsize n_bytes)
++{
++  return calloc (n_blocks, n_bytes);
++}
++#define	standard_try_malloc	standard_malloc
++#define	standard_try_realloc	standard_realloc
++#endif	/* !SANE_MALLOC_PROTOS */
++
++
+ /* --- variables --- */
+ static GMemVTable glib_mem_vtable = {
+-  malloc,
+-  realloc,
+-  free,
+-  calloc,
+-  malloc,
+-  realloc,
++  standard_malloc,
++  standard_realloc,
++  standard_free,
++  standard_calloc,
++  standard_try_malloc,
++  standard_try_realloc,
+ };
+ 
+ /**
+@@ -566,8 +621,8 @@ profiler_log (ProfilerJob job,
+   g_mutex_lock (&gmem_profile_mutex);
+   if (!profile_data)
+     {
+-      profile_data = calloc ((MEM_PROFILE_TABLE_SIZE + 1) * 8, 
+-                             sizeof (profile_data[0]));
++      profile_data = standard_calloc ((MEM_PROFILE_TABLE_SIZE + 1) * 8, 
++                                      sizeof (profile_data[0]));
+       if (!profile_data)	/* memory system kiddin' me, eh? */
+ 	{
+ 	  g_mutex_unlock (&gmem_profile_mutex);
+@@ -766,7 +821,7 @@ profiler_free (gpointer mem)
+ 		    TRUE);
+       memset (p + 2, 0xaa, p[1]);
+ 
+-      /* for all those that miss free (p); in this place, yes,
++      /* for all those that miss standard_free (p); in this place, yes,
+        * we do leak all memory when profiling, and that is intentional
+        * to catch double frees. patch submissions are futile.
+        */
+@@ -793,7 +848,7 @@ profiler_try_realloc (gpointer mem,
+     }
+   else
+     {
+-      p = realloc (mem ? p : NULL, sizeof (gsize) * 2 + n_bytes);
++      p = standard_realloc (mem ? p : NULL, sizeof (gsize) * 2 + n_bytes);
+ 
+       if (p)
+ 	{
