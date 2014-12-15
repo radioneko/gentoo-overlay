@@ -1,0 +1,14 @@
+diff --git a/autoload/youcompleteme.vim b/autoload/youcompleteme.vim
+index 3c34661..888b451 100644
+--- a/autoload/youcompleteme.vim
++++ b/autoload/youcompleteme.vim
+@@ -295,6 +295,9 @@ function! s:AllowedToCompleteInCurrentFile()
+         \ has_key( g:ycm_filetype_whitelist, &filetype )
+   let blacklist_allows = !has_key( g:ycm_filetype_blacklist, &filetype )
+ 
++  if exists( '*pumjustaccepted' ) && pumjustaccepted()
++    return 0
++  endif
+   return whitelist_allows && blacklist_allows
+ endfunction
+ 

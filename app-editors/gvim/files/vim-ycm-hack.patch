@@ -1,0 +1,84 @@
+diff --git a/src/edit.c b/src/edit.c
+index 1883aae..a233f3a 100644
+--- a/src/edit.c
++++ b/src/edit.c
+@@ -102,6 +102,9 @@ static int	  compl_enter_selects = FALSE;
+  * are used. */
+ static char_u	  *compl_leader = NULL;
+ 
++       int	  compl_just_accepted = FALSE;	/* TRUE immediately after
++						   accepting item from
++						   completion menu with C-y*/
+ static int	  compl_get_longest = FALSE;	/* put longest common string
+ 						   in compl_leader */
+ 
+@@ -758,6 +761,9 @@ edit(cmdchar, startln, count)
+ 	 * Get a character for Insert mode.  Ignore K_IGNORE.
+ 	 */
+ 	lastc = c;			/* remember previous char for CTRL-D */
++
++	/* reset just_completed flag */
++	compl_just_accepted = FALSE;
+ 	do
+ 	{
+ 	    c = safe_vgetc();
+@@ -838,6 +844,7 @@ edit(cmdchar, startln, count)
+ 		{
+ 		    ins_compl_delete();
+ 		    ins_compl_insert();
++		    compl_just_accepted = TRUE;
+ 		}
+ 	    }
+ 	}
+@@ -3836,7 +3843,10 @@ ins_compl_prep(c)
+ 	    if ((c == Ctrl_Y || (compl_enter_selects
+ 				   && (c == CAR || c == K_KENTER || c == NL)))
+ 		    && pum_visible())
++	    {
+ 		retval = TRUE;
++		compl_just_accepted = TRUE;
++	    }
+ 
+ 	    /* CTRL-E means completion is Ended, go back to the typed text. */
+ 	    if (c == Ctrl_E)
+diff --git a/src/eval.c b/src/eval.c
+index 09f78fd..3e27192 100644
+--- a/src/eval.c
++++ b/src/eval.c
+@@ -648,6 +648,7 @@ static void f_pow __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_prevnonblank __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_printf __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_pumvisible __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_pumjustaccepted __ARGS((typval_T *argvars, typval_T *rettv));
+ #ifdef FEAT_PYTHON3
+ static void f_py3eval __ARGS((typval_T *argvars, typval_T *rettv));
+ #endif
+@@ -8109,6 +8110,7 @@ static struct fst
+ #endif
+     {"prevnonblank",	1, 1, f_prevnonblank},
+     {"printf",		2, 19, f_printf},
++    {"pumjustaccepted", 0, 0, f_pumjustaccepted},
+     {"pumvisible",	0, 0, f_pumvisible},
+ #ifdef FEAT_PYTHON3
+     {"py3eval",		1, 1, f_py3eval},
+@@ -15003,6 +15005,20 @@ f_pumvisible(argvars, rettv)
+ 	rettv->vval.v_number = 1;
+ #endif
+ }
++/*
++ * returns True if last key combination was "Ctrl_Y"
++ */
++    static void
++f_pumjustaccepted(argvars, rettv)
++    typval_T	*argvars UNUSED;
++    typval_T	*rettv UNUSED;
++{
++#ifdef FEAT_INS_EXPAND
++    extern int compl_just_accepted;
++    if (compl_just_accepted)
++	rettv->vval.v_number = 1;
++#endif
++}
+ 
+ #ifdef FEAT_PYTHON3
+ /*
