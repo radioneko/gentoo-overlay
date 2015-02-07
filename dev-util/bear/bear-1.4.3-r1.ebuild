@@ -13,6 +13,8 @@ if [[ ${PV} == 9999* ]] ; then
 else
 	KEYWORDS="~amd64 ~x86"
 	SRC_URI="https://github.com/rizsotto/Bear/archive/${PV}.tar.gz -> ${P}-git.tgz"
+	MY_PN="${PN/b/B}"
+	S="${WORKDIR}/${MY_PN}-${PV}"
 fi
 
 LICENSE="GPL-3"
