@@ -1,0 +1,74 @@
+diff --git a/src/tokenizer.cpp b/src/tokenizer.cpp
+index 4075c73..6f9baa5 100644
+--- a/src/tokenizer.cpp
++++ b/src/tokenizer.cpp
+@@ -66,7 +66,7 @@ void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *whe
+     this->last_token = error_message;
+ }
+ 
+-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(b), orig_buff(b), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), global_error_offset(-1), squash_errors(false), continue_line_after_comment(false)
++tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(b), orig_buff(b), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), global_error_offset(-1), squash_errors(false), composite_token(false), continue_line_after_comment(false)
+ {
+     assert(b != NULL);
+ 
+@@ -570,6 +570,12 @@ void tokenizer_t::tok_next()
+         return;
+     }
+ 
++    if (this->composite_token) {
++        this->last_type = TOK_STRING;
++		this->composite_token = false;
++        return;
++    }
++
+     if (!this->has_next)
+     {
+         /*    wprintf( L"EOL\n" );*/
+@@ -649,13 +655,31 @@ void tokenizer_t::tok_next()
+             this->last_token.clear();
+             break;
+         case L'&':
+-            this->last_type = TOK_BACKGROUND;
++            if (this->buff[1] == L'&') {
++                /* support "&&" */
++                this->last_type = TOK_END;
++                this->last_token = L"and";
++                this->composite_token = true;
++				this->has_next = true;
++                this->buff++;
++            } else {
++                this->last_type = TOK_BACKGROUND;
++            }
+             this->buff++;
+             break;
+ 
+         case L'|':
+-            this->last_token = L"1";
+-            this->last_type = TOK_PIPE;
++            if (this->buff[1] == L'|') {
++                /* support "||" */
++                this->last_type = TOK_END;
++                this->last_token = L"or";
++                this->composite_token = true;
++				this->has_next = true;
++                this->buff++;
++			} else {
++				this->last_token = L"1";
++				this->last_type = TOK_PIPE;
++			}
+             this->buff++;
+             break;
+ 
+diff --git a/src/tokenizer.h b/src/tokenizer.h
+index d6de255..2eab986 100644
+--- a/src/tokenizer.h
++++ b/src/tokenizer.h
+@@ -127,6 +127,8 @@ class tokenizer_t
+     size_t global_error_offset;
+     /* Whether we are squashing errors */
+     bool squash_errors;
++    /* true if current token is composite */
++    bool composite_token;
+ 
+     /* Whether to continue the previous line after the comment */
+     bool continue_line_after_comment;

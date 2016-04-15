@@ -1,0 +1,74 @@
+diff --git a/tokenizer.cpp b/tokenizer.cpp
+index 0725332..17c89eb 100644
+--- a/tokenizer.cpp
++++ b/tokenizer.cpp
+@@ -94,7 +94,7 @@ int tok_get_error(tokenizer_t *tok)
+ }
+ 
+ 
+-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0), continue_line_after_comment(false)
++tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), composite_token(false), cached_lineno_offset(0), cached_lineno_count(0), continue_line_after_comment(false)
+ {
+     CHECK(b,);
+ 
+@@ -575,6 +575,12 @@ void tok_next(tokenizer_t *tok)
+         return;
+     }
+ 
++    if (tok->composite_token) {
++        tok->last_type = TOK_STRING;
++		tok->composite_token = false;
++        return;
++    }
++
+     if (!tok->has_next)
+     {
+         /*    wprintf( L"EOL\n" );*/
+@@ -654,13 +660,31 @@ void tok_next(tokenizer_t *tok)
+             tok->last_token.clear();
+             break;
+         case L'&':
+-            tok->last_type = TOK_BACKGROUND;
++            if (tok->buff[1] == L'&') {
++                /* support "&&" */
++                tok->last_type = TOK_END;
++                tok->last_token = L"and";
++                tok->composite_token = true;
++				tok->has_next = true;
++                tok->buff++;
++            } else {
++                tok->last_type = TOK_BACKGROUND;
++            }
+             tok->buff++;
+             break;
+ 
+         case L'|':
+-            tok->last_token = L"1";
+-            tok->last_type = TOK_PIPE;
++            if (tok->buff[1] == L'&') {
++                /* support "&&" */
++                tok->last_type = TOK_END;
++                tok->last_token = L"and";
++                tok->composite_token = true;
++				tok->has_next = true;
++                tok->buff++;
++            } else {
++                tok->last_token = L"1";
++                tok->last_type = TOK_PIPE;
++            }
+             tok->buff++;
+             break;
+ 
+diff --git a/tokenizer.h b/tokenizer.h
+index d7e202b..53af39d 100644
+--- a/tokenizer.h
++++ b/tokenizer.h
+@@ -98,6 +98,8 @@ struct tokenizer_t
+     int error;
+     /* Whether we are squashing errors */
+     bool squash_errors;
++    /* true if current token is composite */
++    bool composite_token;
+ 
+     /* Cached line number information */
+     size_t cached_lineno_offset;
