@@ -7,8 +7,10 @@ inherit multilib cmake-utils
 
 DESCRIPTION="Build EAR: tool for generating llvm compilation databases"
 HOMEPAGE="https://github.com/rizsotto/Bear"
+
 if [[ ${PV} == 9999* ]] ; then
 	EGIT_REPO_URI="git://github.com/rizsotto/Bear.git"
+	KEYWORDS=""
 	inherit git-r3
 else
 	KEYWORDS="~amd64 ~x86"
@@ -19,7 +21,6 @@ fi
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS=""
 IUSE=""
 
 RDEPEND=">=dev-libs/libconfig-1.4"
