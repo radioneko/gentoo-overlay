@@ -1,0 +1,13 @@
+diff --git a/configure.ac b/configure.ac
+index fa6a58f..d01b167 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -31,7 +31,7 @@ AC_CHECK_HEADERS([getopt.h math.h])
+ dnl Checks for libraries.
+ LT_LIB_M  
+ LDFLAGS="$LIBM $LDFLAGS"
+-CFLAGS="-Wall"
++CFLAGS="-Wall $CFLAGS"
+ 
+ AC_PROG_CXX
+ CXXFLAGS="-Wall -Wno-unused-function -DNDEBUG -O3 -fomit-frame-pointer $CXXFLAGS"
