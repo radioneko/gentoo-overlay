@@ -10,8 +10,8 @@ inherit eutils git-r3 python-single-r1
 
 DESCRIPTION="config generator for youcompleteme"
 HOMEPAGE="https://github.com/rdnetto/YCM-Generator"
-EGIT_REPO_URI="git://github.com/rdnetto/YCM-Generator.git"
-EGIT_BRANCH="stable"
+EGIT_REPO_URI="git://github.com/dmpetroff/YCM-Generator.git"
+EGIT_BRANCH="better-lang-detection"
 
 LICENSE="GPL-3"
 SLOT="0"
