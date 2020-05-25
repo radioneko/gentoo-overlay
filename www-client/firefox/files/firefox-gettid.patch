@@ -1,0 +1,18 @@
+diff --git a/tools/profiler/core/platform.h b/tools/profiler/core/platform.h
+index 2e736d97c..fac6cc24d 100644
+--- a/tools/profiler/core/platform.h
++++ b/tools/profiler/core/platform.h
+@@ -63,13 +63,6 @@
+ // provide a wrapper for it (except for Bionic)
+ #if defined(__linux__)
+ #include <unistd.h>
+-#if !defined(__BIONIC__)
+-#include <sys/syscall.h>
+-static inline pid_t gettid()
+-{
+-  return (pid_t) syscall(SYS_gettid);
+-}
+-#endif
+ #endif
+ 
+ #ifdef XP_WIN
