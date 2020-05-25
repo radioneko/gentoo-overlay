@@ -2,13 +2,13 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI="2"
+EAPI="7"
 
 inherit font
 
 DESCRIPTION="A monospaced sans-serif typeface, used in Mac OS X"
 HOMEPAGE="http://www.gringod.com/2006/11/01/new-version-of-monaco-font/"
-SRC_URI="http://www.gringod.com/wp-upload/software/Fonts/Monaco_Linux.ttf"
+SRC_URI="https://elinux.org/images/1/12/Monaco_Linux.ttf"
 
 LICENSE="as-is"
 SLOT="0"
