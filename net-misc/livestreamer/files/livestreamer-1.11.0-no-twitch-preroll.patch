@@ -1,0 +1,13 @@
+diff --git a/src/livestreamer/plugins/twitch.py b/src/livestreamer/plugins/twitch.py
+index 0adc872..21a981f 100644
+--- a/src/livestreamer/plugins/twitch.py
++++ b/src/livestreamer/plugins/twitch.py
+@@ -178,7 +178,7 @@ class TwitchAPI(object):
+             return res
+ 
+     def access_token(self, endpoint, asset, **params):
+-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
++        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **dict(platform="_", **params))
+ 
+     def channel_info(self, channel, **params):
+         return self.call("/api/channels/{0}".format(channel), **params)

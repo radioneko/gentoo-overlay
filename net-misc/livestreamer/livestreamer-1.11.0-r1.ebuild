@@ -25,4 +25,5 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	epatch "${FILESDIR}/${P}-twitch.patch"
+	epatch "${FILESDIR}/${P}-no-twitch-preroll.patch"
 }
